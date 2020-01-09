@@ -64,6 +64,7 @@ function runBasicCycle() {
         if (cur_time % 2 == 0) {
             // 拍卖行扫货
             searchAndBuyCheapGoods();
+            startAutoFinishFactionTask();
         }
 
         // 5秒执行一次
