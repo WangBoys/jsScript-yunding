@@ -40,7 +40,7 @@ var userInfo = {
 
     //绑定点击事件
     button1.onclick = function () {
-        sellUnIdentifyGoods();
+        startAutoFinishFactionTask();
     };
 
     var container = document.querySelector('body');
@@ -300,6 +300,7 @@ function finishTask(taskId, funcResult) {
         body,
         function (data) {
             if (funcResult != null) {
+                console.log('完成任务:' + data.msg);
                 funcResult(data);
             }
         })
@@ -452,30 +453,35 @@ function searchAndBuyCheapGoods() {
 function startAutoFinishFactionTask() {
     var blackListTaskNameArray = ['藏书阁', '百万宠物丹', '寻找精血', '大量火石储备', '药房储备'];
     // 先检查自己的任务列表有没有帮派任务
-    var funcFindMyFactionTask = function (taskList) {    
+    var funcFindMyFactionTask = function (taskList) {
         taskList.forEach(task => {
             // 是帮派任务
             if (task.task.task_type == 4) {
                 // 判断这些帮派任务是不是值得做的几个之一
+                var isInBlackList = false;
                 blackListTaskNameArray.forEach(name => {
                     // 如果在黑名单中，就放弃任务
                     if (task.task.name.indexOf(name) > -1) {
-                        giveUpTask(data.utid, null);
-                    } else {
-                        // 尝试完成任务
-                        finishTask(data.utid, function (res) {
-                            // 完成失败就放弃
-                            if (res.code != 200) {
-                                giveUpTask(data.utid, null);
-                            }
-                        });
+                        isInBlackList = true;
+                        giveUpTask(task.utid, null);
                     }
                 });
+                if (!isInBlackList) {
+
+                    // 尝试完成任务
+                    finishTask(task.utid, function (res) {
+                        // 完成失败就放弃
+                        if (res.code != 200) {
+                            giveUpTask(task.utid, null);
+                        }
+                    });
+
+                }
             }
         });
     };
-    
-    // 先拉去一次帮派任务 无论成功或者失败就开始做帮派任务
+
+    // 先拉一次帮派任务 无论成功或者失败就开始做帮派任务
     getFactionTask(function (res) {
         getUserTasks(funcFindMyFactionTask);
     });
