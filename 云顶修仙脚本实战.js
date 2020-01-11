@@ -15,6 +15,7 @@ var userInfo = {
     exp: 0,
     fagitue: 0,
 };
+var factionTaskEanbled = false; // 是否可以循环做帮派任务
 
 (function () {
     if (!window.localStorage) {
@@ -40,7 +41,7 @@ var userInfo = {
 
     //绑定点击事件
     button1.onclick = function () {
-        startAutoFinishFactionTask();
+        makeTaskGoods();
     };
 
     var container = document.querySelector('body');
@@ -63,13 +64,17 @@ function runBasicCycle() {
         // 2秒执行一次
         if (cur_time % 2 == 0) {
             // 拍卖行扫货
-            searchAndBuyCheapGoods();
-            startAutoFinishFactionTask();
+            if (userInfo.name == '塞药宇') {
+                searchAndBuyCheapGoods();
+            }
         }
 
         // 5秒执行一次
         if (cur_time % 5 == 0) {
-
+            // 做帮派任务
+            if (factionTaskEanbled) {
+                startAutoFinishFactionTask();
+            }
         }
 
         // 30秒执行一次
@@ -77,10 +82,18 @@ function runBasicCycle() {
             // 检测是否在自动打怪
         }
 
-        // 一分钟执行一次
         if (cur_time % 60 == 0) {
-            // 卖低于未鉴定物品
-            // sellUnIdentifyGoods();
+            
+        }
+
+        // 10分钟执行一次
+        if (cur_time % 600 == 0) {
+            // 卖低级未鉴定物品
+            sellUnIdentifyGoods();
+            // 合成任务物品
+            makeTaskGoods();
+            // 检测帮派任务状态
+            updateFactionTaskStatus();
             // 重置倒计时 避免越界
             cur_time = 0;
         }
@@ -130,6 +143,7 @@ function getUserGoods(func_a, func_end) {
         return response.json()
     }).then(function (res) {
         var pages = res.pages;
+        var resultPages = 0;
         for (var j = 1; j < pages + 1; j++) {
             fetch("http://joucks.cn:3344/api/getUserGoods?page=" + j, {
                 method: "GET",
@@ -137,15 +151,16 @@ function getUserGoods(func_a, func_end) {
                     'Cookie': cookie,
                 }
             }).then(function (response) {
-                return response.json()
+                return response.json();
             }).then(function (res) {
                 for (var i = 0; i < res.data.length; i++) {
                     if (res.data[i].goods != null && func_a != null) {
                         func_a(res.data[i]);
                     }
                 }
+                resultPages += 1;
                 // 完成后回调
-                if (res.pages == pages && func_end != null) {
+                if (pages == resultPages && func_end != null) {
                     func_end();
                 }
             })
@@ -301,7 +316,12 @@ function finishTask(taskId, funcResult) {
         body,
         function (data) {
             if (funcResult != null) {
-                console.log('完成任务:' + data.msg);
+                if (data.code == 200) {
+                    console.log('完成任务:' + data.msg + ' 任务名字:' + data.data.name + ' 金叶:' + data.data.game_gold);
+                } else {
+                    console.log('完成任务:' + data.msg);
+                }
+                
                 funcResult(data);
             }
         })
@@ -346,31 +366,62 @@ function makeExpGood() {
     getUserGoods(temp_func, func_end);
 }
 
-// 合成竹叶碎青
+// 合成任务所需物品 竹叶碎青
+function makeTaskGoods() {
+    var zuyeNum = 0;
+    var suiqinNum = 0;
+    var zuyeId = "";
+    var suiqinId = "";
+    var temp_func = function (data) {
+        if (data.goods.name == "竹叶") {
+            zuyeNum = data.count;
+            zuyeId = data._id
+        } else if (data.goods.name == "碎青") {
+            suiqinNum = data.count;
+            suiqinId = data._id;
+        }
+    };
 
+    var func_end = function () {
+        if (zuyeNum == 0 || suiqinNum == 0) {
+            console.log('合成竹叶碎青缺少材料');
+            return;
+        }
+        var makeNum = zuyeNum < suiqinNum ? zuyeNum : suiqinNum;
+        var temp_json = [
+            { "id": suiqinId, "count": makeNum, "name": "碎青", "style": "text-shadow:1px 1px px dimgray;color:dimgray;" },
+            { "id": zuyeId, "count": makeNum, "name": "竹叶", "style": "text-shadow:1px 1px px dimgray;color:dimgray;" }
+        ];
+
+        makeGood(temp_json);
+    }
+
+    getUserGoods(temp_func, func_end);
+}
 
 // 合成占星珠
 
 
-// 卖未鉴定的装备(用户等级大于55才卖)
+// 卖未鉴定的装备
 function sellUnIdentifyGoods() {
-    // if (userInfo.level < 55) {
-    //     return;
-    // }
+    var needSellGoods = ['鱼尾斧', '金丝软甲', '千里宝靴', '鉴-青铜', '鉴-皮质', '鉴-鹿皮盔', '鉴-铁', '鉴-竹', '鉴-冬霜冠', '鉴-薜荔腰带', '祥瑞玉兔', '鉴-皮革', '浣花玉伞', '平安银配'];
+
     var sell_goods = [];
     var func_temp = function (data) {
-        if (data.goods.name.indexOf("鉴") > -1 && data.goods.is_sell == "0") {
-            var temp_good = {};
-            temp_good["id"] = data._id;
-            temp_good["count"] = data.count + "";
-            temp_good["name"] = data.goods.name;
-            temp_good["style"] = data.goods.style;
-            sell_goods.push(temp_good);
-        }
+        needSellGoods.forEach(name => {
+            if (data.goods.name.indexOf(name) > -1 && data.goods.is_sell == "0") {
+                var temp_good = {};
+                temp_good["id"] = data._id;
+                temp_good["count"] = data.count + "";
+                temp_good["name"] = data.goods.name;
+                temp_good["style"] = data.goods.style;
+                sell_goods.push(temp_good);
+            }
+        });
     }
 
     var func_end = function () {
-        if (sell_goods.count > 0) {
+        if (sell_goods.length > 0) {
             sellGoods(JSON.stringify(sell_goods));
         }
     }
@@ -450,6 +501,25 @@ function searchAndBuyCheapGoods() {
     getSellGoods(func_a, 1);
 }
 
+// 查看当前是否能循环做帮派任务(帮派任务做满100个、帮派任务没有了)
+function updateFactionTaskStatus() {
+    var funcFindMyFactionTask = function (taskList) {
+        var isFactionTaskExist = false;
+        taskList.forEach(task => {
+            // 是帮派任务
+            if (task.task.task_type == 4) {
+                isFactionTaskExist = true;
+            }
+        });
+
+        factionTaskEanbled = isFactionTaskExist;
+    };
+
+    getFactionTask(function (res) {
+        getUserTasks(funcFindMyFactionTask);
+    });
+}
+
 // 自动做帮派任务
 function startAutoFinishFactionTask() {
     var blackListTaskNameArray = ['藏书阁', '百万宠物丹', '寻找精血', '大量火石储备', '药房储备'];
@@ -465,15 +535,16 @@ function startAutoFinishFactionTask() {
                     if (task.task.name.indexOf(name) > -1) {
                         isInBlackList = true;
                         giveUpTask(task.utid, null);
+                        console.log('放弃任务:' + task.task.name);
                     }
                 });
                 if (!isInBlackList) {
-
                     // 尝试完成任务
                     finishTask(task.utid, function (res) {
                         // 完成失败就放弃
                         if (res.code != 200) {
                             giveUpTask(task.utid, null);
+                            console.log('放弃任务:' + task.task.name + '-' + task.task.info);
                         }
                     });
 
