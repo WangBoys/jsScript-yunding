@@ -48,6 +48,7 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     container.appendChild(textEle);
 
     getUserInfo();
+    updateFactionTaskStatus();
     runBasicCycle();
 
 })();
@@ -384,7 +385,6 @@ function makeTaskGoods() {
 
     var func_end = function () {
         if (zuyeNum == 0 || suiqinNum == 0) {
-            console.log('合成竹叶碎青缺少材料');
             return;
         }
         var makeNum = zuyeNum < suiqinNum ? zuyeNum : suiqinNum;
