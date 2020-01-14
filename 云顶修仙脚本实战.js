@@ -34,6 +34,7 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     textEle.style.right = "30px";
     textEle.style.top = "300px";
     textEle.style.zIndex = "10000";
+    textEle.id = "testId";
 
     var button1 = document.createElement("button");
     button1.innerHTML = '测试按钮';
@@ -51,6 +52,7 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     updateFactionTaskStatus();
     runBasicCycle();
 
+    $("#testId").load("functionWindow.html");
 })();
 
 // --- 基础功能 ---
@@ -66,7 +68,7 @@ function runBasicCycle() {
         if (cur_time % 2 == 0) {
             // 拍卖行扫货
             if (userInfo.name == '塞药宇') {
-                searchAndBuyCheapGoods();
+                // searchAndBuyCheapGoods();
             }
         }
 
