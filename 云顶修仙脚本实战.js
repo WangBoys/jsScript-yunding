@@ -428,7 +428,7 @@ function makeTaskGoods() {
 
 // 卖未鉴定的装备
 function sellUnIdentifyGoods() {
-    var needSellGoods = ['鱼尾斧', '金丝软甲', '千里宝靴', '鉴-青铜', '鉴-皮质', '鉴-鹿皮盔', '鉴-铁', '鉴-竹', '鉴-冬霜冠', '鉴-薜荔腰带', '祥瑞玉兔', '鉴-皮革', '浣花玉伞', '平安银配'];
+    var needSellGoods = ['鱼尾斧', '金丝软甲', '千里宝靴', '鉴-青铜', '鉴-皮质', '鉴-鹿皮盔', '鉴-铁', '鉴-竹', '鉴-冬霜冠', '鉴-薜荔腰带', '祥瑞玉兔', '鉴-皮革', '浣花玉伞', '平安银配', '鉴-棉布', '平安扣'];
 
     var sell_goods = [];
     var func_temp = function (data) {
