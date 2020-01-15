@@ -29,30 +29,22 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     textEle.style.color = "white";
     textEle.style.fontSize = "30px";
     textEle.style.padding = "10px 20px";
-    textEle.style.background = "green";
+    textEle.style.background = "#00DECB";
     textEle.style.position = "fixed";
     textEle.style.right = "30px";
     textEle.style.top = "300px";
     textEle.style.zIndex = "10000";
-    textEle.id = "testId";
-
-    var button1 = document.createElement("button");
-    button1.innerHTML = '测试按钮';
-    textEle.appendChild(button1);
-
-    //绑定点击事件
-    button1.onclick = function () {
-        makeTaskGoods();
-    };
-
+    textEle.innerHTML =
+        '<input type="checkbox" id="autoMakeGood" checked> 自动合成物品(竹叶碎青、神龙)<br> ' +
+        '<input type="checkbox" id="autoSellGood" checked> 自动卖低级未鉴定的物品<br> ' +
+        '<input type="checkbox" id="autoFinishFationTask"> 自动做帮派任务<br>' +
+        '<input type="checkbox" id="autoPk"> 自动pk<br> ';
     var container = document.querySelector('body');
     container.appendChild(textEle);
 
     getUserInfo();
     updateFactionTaskStatus();
     runBasicCycle();
-
-    $("#testId").load("functionWindow.html");
 })();
 
 // --- 基础功能 ---
@@ -62,20 +54,18 @@ function runBasicCycle() {
     var cur_time = 0;
     setInterval(() => {
         cur_time = cur_time + 1;
-        // 1秒执行一次
 
-        // 2秒执行一次
-        if (cur_time % 2 == 0) {
-            // 拍卖行扫货
-            if (userInfo.name == '塞药宇') {
-                // searchAndBuyCheapGoods();
-            }
-        }
+        var autoMakeGood = $("#autoMakeGood").is(":checked");
+        var autoSellGood = $("#autoSellGood").is(":checked");
+        var autoFinishFationTask = $("#autoFinishFationTask").is(":checked");
+        var autoPk = $("#autoPk").is(":checked");
+
+        // 1秒执行一次
 
         // 5秒执行一次
         if (cur_time % 5 == 0) {
             // 做帮派任务
-            if (factionTaskEanbled) {
+            if (autoFinishFationTask && factionTaskEanbled) {
                 startAutoFinishFactionTask();
             }
         }
@@ -86,15 +76,21 @@ function runBasicCycle() {
         }
 
         if (cur_time % 60 == 0) {
-            
+
         }
 
         // 10分钟执行一次
         if (cur_time % 600 == 0) {
             // 卖低级未鉴定物品
-            sellUnIdentifyGoods();
+            if (autoSellGood) {
+                sellUnIdentifyGoods();
+            }
+
             // 合成任务物品
-            makeTaskGoods();
+            if (autoMakeGood) {
+                makeTaskGoods();
+            }
+
             // 检测帮派任务状态
             updateFactionTaskStatus();
             // 重置倒计时 避免越界
@@ -190,7 +186,15 @@ function sellGoods(goodsJson) {
     }).then(function (response) {
         return response.json()
     }).then(function (res) {
-        console.log('卖物品:' + res + ' 内容:' + goodsJson);
+        if (res.code == 200) {
+            var goodsArray = JSON.parse(goodsJson);
+            
+            var goodsStr = '';
+            goodsArray.forEach(good => {
+                goodsStr = goodsStr + good['name'] + '数目: ' + good['count'+ '，'];
+            });
+            console.log(getCurrentTimeStr() + '卖物品:' + res.msg + ' 内容:' + goodsJson);
+        }
     });
 }
 
@@ -205,7 +209,7 @@ function useGood(id) {
         body: 'ugid=' + id
     }).then(function (response) {
     }).then(function (res) {
-        console.log(res)
+        console.log(getCurrentTimeStr() + res)
     });
 }
 
@@ -218,7 +222,7 @@ function makeGood(goods_json) {
         },
 
         function (data) {
-            console.log('makeGood log:' + data.msg);
+            console.log(getCurrentTimeStr() + 'makeGood log:' + data.msg);
         })
 }
 
@@ -257,7 +261,7 @@ function buySellGood(id, type, pwd) {
         body,
 
         function (data) {
-            console.log('buySellGood log:' + data.msg);
+            console.log(getCurrentTimeStr() + 'buySellGood log:' + data.msg);
         })
 }
 
@@ -272,7 +276,7 @@ function getFactionTask(funcA) {
         return response.json()
     }).then(function (res) {
         if (funcA != null) {
-            console.log('领取帮派任务log:' + res.msg);
+            console.log(getCurrentTimeStr() + '领取帮派任务:' + res.msg);
             funcA(res);
         }
     })
@@ -320,17 +324,35 @@ function finishTask(taskId, funcResult) {
         function (data) {
             if (funcResult != null) {
                 if (data.code == 200) {
-                    console.log('完成任务:' + data.msg + ' 任务名字:' + data.data.name + ' 金叶:' + data.data.game_gold);
+                    console.log(getCurrentTimeStr() + '完成任务:' + data.data.name + ' 获得金叶:' + data.data.game_gold);
                 } else {
-                    console.log('完成任务:' + data.msg);
+                    console.log(getCurrentTimeStr() + '不满足任务条件:');
                 }
-                
                 funcResult(data);
             }
         })
 }
 
+function logSeparateLine() {
+    console.log('============================================');
+}
 
+
+var dateObj = new Date();
+function getCurrentTimeStr() {
+        var y = dateObj.getFullYear();
+        var m = dateObj.getMonth() + 1;
+        m = m < 10 ? ('0' + m) : m;
+        var d = dateObj.getDate();
+        d = d < 10 ? ('0' + d) : d;
+        var h = dateObj.getHours();
+        h = h < 10 ? ('0' + h) : h;
+        var minute = dateObj.getMinutes();
+        var second = dateObj.getSeconds();
+        minute = minute < 10 ? ('0' + minute) : minute;
+        second = second < 10 ? ('0' + second) : second;
+        return '[' + y + '-' + m + '-' + d + ' ' + h + ':' + minute + ':' + second + ']  ';
+}
 
 // --- 各种操作 ---
 
@@ -351,7 +373,7 @@ function makeExpGood() {
 
     var func_end = function () {
         if (canhun_type_count != 7) {
-            console.log('缺少残魂碎片');
+            console.log(getCurrentTimeStr() + '缺少残魂碎片');
             return;
         }
         var temp_json = [
@@ -464,7 +486,7 @@ function searchAndBuyCheapGoods() {
         for (i = 0; i < oneNameArray.length; i++) {
             name = oneNameArray[i];
             if (data.goods.name.indexOf(name) > -1 && data.game_gold / data.count <= 1) {
-                console.log('扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
+                console.log(getCurrentTimeStr() + '扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
                 buySellGood(data._id, '', '');
             }
         }
@@ -473,7 +495,7 @@ function searchAndBuyCheapGoods() {
         for (i = 0; i < threeNameArray.length; i++) {
             name = threeNameArray[i];
             if (data.goods.name.indexOf(name) > -1 && data.game_gold / data.count <= 3) {
-                console.log('扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
+                console.log(getCurrentTimeStr() + '扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
                 buySellGood(data._id, '', '');
             }
         }
@@ -482,20 +504,20 @@ function searchAndBuyCheapGoods() {
         for (i = 0; i < fiveNameArray.length; i++) {
             name = fiveNameArray[i];
             if (data.goods.name.indexOf(name) > -1 && data.game_gold / data.count <= 5) {
-                console.log('扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
+                console.log(getCurrentTimeStr() + '扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
                 buySellGood(data._id, '', '');
             }
         }
 
         if (data.goods.name.indexOf('麒麟碎片') > -1 && data.goods.name.indexOf('土') > -1 && data.game_gold / data.count <= 30000) {
             // 单价小于3w金叶的麒麟土碎片
-            console.log('扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
+            console.log(getCurrentTimeStr() + '扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
             buySellGood(data._id, '1', '');
         }
 
         if (data.goods.name.indexOf('麒麟碎片') > -1 && data.goods.name.indexOf('火') > -1 && data.game_gold / data.count <= 7000) {
             // 单价小于7000金叶的麒麟火碎片
-            console.log('扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
+            console.log(getCurrentTimeStr() + '扫描到物品:' + data.goods.name + ' ,数量:' + data.count + ' ,单价:' + data.game_gold / data.count);
             buySellGood(data._id, '1', '');
         }
     }
@@ -524,32 +546,34 @@ function updateFactionTaskStatus() {
 
 // 自动做帮派任务
 function startAutoFinishFactionTask() {
-    var blackListTaskNameArray = ['藏书阁', '百万宠物丹', '寻找精血', '大量火石储备', '药房储备'];
+    logSeparateLine();
+
+    var taskNameArray = ['武器库储备'];
     // 先检查自己的任务列表有没有帮派任务
     var funcFindMyFactionTask = function (taskList) {
         taskList.forEach(task => {
             // 是帮派任务
             if (task.task.task_type == 4) {
+                console.log(getCurrentTimeStr() + '当前帮派任务:' + task.task.name);
                 // 判断这些帮派任务是不是值得做的几个之一
-                var isInBlackList = false;
-                blackListTaskNameArray.forEach(name => {
-                    // 如果在黑名单中，就放弃任务
+                var needFinish = false;
+                taskNameArray.forEach(name => {
+                    // 如果在任务名单中就完成
                     if (task.task.name.indexOf(name) > -1) {
-                        isInBlackList = true;
-                        giveUpTask(task.utid, null);
-                        console.log('放弃任务:' + task.task.name);
+                        needFinish = true;
+                        // 尝试完成任务
+                        finishTask(task.utid, function (res) {
+                            // 完成失败就放弃
+                            if (res.code != 200) {
+                                giveUpTask(task.utid, null);
+                                console.log(getCurrentTimeStr() + '放弃任务:' + task.task.name + '-' + task.task.info);
+                            }
+                        });
                     }
                 });
-                if (!isInBlackList) {
-                    // 尝试完成任务
-                    finishTask(task.utid, function (res) {
-                        // 完成失败就放弃
-                        if (res.code != 200) {
-                            giveUpTask(task.utid, null);
-                            console.log('放弃任务:' + task.task.name + '-' + task.task.info);
-                        }
-                    });
-
+                if (!needFinish) {
+                    giveUpTask(task.utid, null);
+                    console.log(getCurrentTimeStr() + '放弃任务:' + task.task.name + '-' + task.task.info);
                 }
             }
         });
