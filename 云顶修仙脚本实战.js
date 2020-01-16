@@ -35,10 +35,10 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     textEle.style.top = "300px";
     textEle.style.zIndex = "10000";
     textEle.innerHTML =
-        '<input type="checkbox" id="autoMakeGood" checked> 自动合成物品(竹叶碎青、神龙)<br> ' +
+        '<input type="checkbox" id="autoMakeGood" checked> 自动合成物品(竹叶碎青)<br> ' +
         '<input type="checkbox" id="autoSellGood" checked> 自动卖低级未鉴定的物品<br> ' +
         '<input type="checkbox" id="autoFinishFationTask"> 自动做帮派任务<br>' +
-        '<input type="checkbox" id="autoPk"> 自动pk<br> ';
+        '<input type="checkbox" id="autoPk"> 自动pk(暂未支持)<br> ';
     var container = document.querySelector('body');
     container.appendChild(textEle);
 
@@ -101,8 +101,8 @@ function runBasicCycle() {
 
 // 登陆
 function userLogin() {
-    var user_name = 'longteng@gmail.com';
-    var pass_word = 'lt19950416';
+    var user_name = '';
+    var pass_word = '';
 
     $.post("/api/login", { user_name: user_name, user_pwd: pass_word }, function (data) {
         if (data.code == 200) {
