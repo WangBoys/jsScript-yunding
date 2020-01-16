@@ -1,7 +1,7 @@
 ## 使用说明
 1. `chrome`浏览器使用`tamperMonkey`插件, **注:需要翻墙**
 
-2. [点击安装](chrome-extension://dhdgffkkebhmkfjojejmpbldmpobfkfo/ask.html?aid=34b6a802-efcc-46b9-9525-04b6f636031d)
+2. [点击安装](http://chrome-extension://dhdgffkkebhmkfjojejmpbldmpobfkfo/ask.html?aid=34b6a802-efcc-46b9-9525-04b6f636031d)
 
 3. 刷新云顶
 
