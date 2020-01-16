@@ -9,6 +9,10 @@
 // @run-at       document-end
 // ==/UserScript==
 
+var key_autoMakeGood = "key_autoMakeGood";
+var key_autoSellGood = "key_autoSellGood";
+var key_autoFinishFationTask = "key_autoFinishFationTask";
+var key_autoPk = "key_autoPk";
 var cookie = '';
 var userInfo = {
     name: '',
@@ -36,19 +40,50 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     textEle.style.top = "300px";
     textEle.style.zIndex = "10000";
     textEle.innerHTML =
-        '<input type="checkbox" id="autoMakeGood" checked> 自动合成物品(竹叶碎青)<br> ' +
-        '<input type="checkbox" id="autoSellGood" checked> 自动卖低级未鉴定的物品<br> ' +
+        '<input type="checkbox" id="autoMakeGood"> 自动合成物品(竹叶碎青)<br> ' +
+        '<input type="checkbox" id="autoSellGood"> 自动卖低级未鉴定的物品<br> ' +
         '<input type="checkbox" id="autoFinishFationTask"> 自动做帮派任务<br>' +
         '<input type="checkbox" id="autoPk"> 自动pk(暂未支持)<br> ';
     var container = document.querySelector('body');
     container.appendChild(textEle);
 
-    getUserInfo();
-    updateFactionTaskStatus();
+
+    setupData();
     runBasicCycle();
 })();
 
 // --- 基础功能 ---
+
+// 获取缓存的一些配置信息，获取用户信息，获取用户公会任务状态
+function setupData() {
+    getUserInfo();
+    updateFactionTaskStatus();
+    if (localStorage.getItem(key_autoMakeGood) == "1") {
+        $("#autoMakeGood").attr('checked', true);
+    }
+    if (localStorage.getItem(key_autoSellGood) == "1") {
+        $("#autoSellGood").attr('checked', true);
+    }
+    if (localStorage.getItem(key_autoFinishFationTask) == "1") {
+        $("#autoFinishFationTask").attr('checked', true);
+    }
+    if (localStorage.getItem(key_autoPk) == "1") {
+        $("#autoPk").attr('checked', true);
+    }
+
+    $("#autoMakeGood").change(function () {
+        localStorage.setItem(key_autoMakeGood, $("#autoMakeGood").is(":checked") ? "1" : "0");
+    });
+    $("#autoSellGood").change(function () {
+        localStorage.setItem(key_autoSellGood, $("#autoSellGood").is(":checked") ? "1" : "0");
+    });
+    $("#autoFinishFationTask").change(function () {
+        localStorage.setItem(key_autoFinishFationTask, $("#autoFinishFationTask").is(":checked") ? "1" : "0");
+    });
+    $("#autoPk").change(function () {
+        localStorage.setItem(key_autoPk, $("#autoPk").is(":checked") ? "1" : "0");
+    });
+}
 
 // 基础循环逻辑
 function runBasicCycle() {
@@ -145,27 +180,28 @@ function getUserGoods(func_a, func_end) {
         var pages = res.pages;
         var resultPages = 0;
         for (var j = 1; j < pages + 1; j++) {
-            fetch("http://joucks.cn:3344/api/getUserGoods?page=" + j, {
-                method: "GET",
-                headers: {
-                    'Cookie': cookie,
-                }
-            }).then(function (response) {
-                return response.json();
-            }).then(function (res) {
-                for (var i = 0; i < res.data.length; i++) {
-                    if (res.data[i].goods != null && func_a != null) {
-                        func_a(res.data[i]);
+            var tempPage = j;
+            setTimeout(function () {
+                fetch("http://joucks.cn:3344/api/getUserGoods?page=" + tempPage, {
+                    method: "GET",
+                    headers: {
+                        'Cookie': cookie,
                     }
-                }
-                resultPages += 1;
-                // 完成后回调
-                if (pages == resultPages && func_end != null) {
-                    func_end();
-                }
-            })
-
-            
+                }).then(function (response) {
+                    return response.json();
+                }).then(function (res) {
+                    for (var i = 0; i < res.data.length; i++) {
+                        if (res.data[i].goods != null && func_a != null) {
+                            func_a(res.data[i]);
+                        }
+                    }
+                    resultPages += 1;
+                    // 完成后回调
+                    if (pages == resultPages && func_end != null) {
+                        func_end();
+                    }
+                })
+            }, 1000 * (tempPage - 1));
         }
     })
 }
@@ -194,7 +230,7 @@ function sellGoods(goodsJson) {
 
             var goodsStr = '';
             goodsArray.forEach(good => {
-                goodsStr = goodsStr + good['name'] + '数目: ' + good['count'+ '，'];
+                goodsStr = goodsStr + good['name'] + '数目: ' + good['count' + '，'];
             });
             console.log(getCurrentTimeStr() + '卖物品:' + res.msg + ' 内容:' + goodsArray);
         }
@@ -343,18 +379,18 @@ function logSeparateLine() {
 
 var dateObj = new Date();
 function getCurrentTimeStr() {
-        var y = dateObj.getFullYear();
-        var m = dateObj.getMonth() + 1;
-        m = m < 10 ? ('0' + m) : m;
-        var d = dateObj.getDate();
-        d = d < 10 ? ('0' + d) : d;
-        var h = dateObj.getHours();
-        h = h < 10 ? ('0' + h) : h;
-        var minute = dateObj.getMinutes();
-        var second = dateObj.getSeconds();
-        minute = minute < 10 ? ('0' + minute) : minute;
-        second = second < 10 ? ('0' + second) : second;
-        return '[' + y + '-' + m + '-' + d + ' ' + h + ':' + minute + ':' + second + ']  ';
+    var y = dateObj.getFullYear();
+    var m = dateObj.getMonth() + 1;
+    m = m < 10 ? ('0' + m) : m;
+    var d = dateObj.getDate();
+    d = d < 10 ? ('0' + d) : d;
+    var h = dateObj.getHours();
+    h = h < 10 ? ('0' + h) : h;
+    var minute = dateObj.getMinutes();
+    var second = dateObj.getSeconds();
+    minute = minute < 10 ? ('0' + minute) : minute;
+    second = second < 10 ? ('0' + second) : second;
+    return '[' + y + '-' + m + '-' + d + ' ' + h + ':' + minute + ':' + second + ']  ';
 }
 
 // --- 各种操作 ---
