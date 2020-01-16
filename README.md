@@ -1,7 +1,7 @@
 ## 使用说明
 1. `chrome`浏览器使用`tamperMonkey`插件, **注:需要翻墙**
 
-2. [点击安装](https://github.com/lt541013990/jsScript-yunding/blob/master/%E4%BA%91%E9%A1%B6%E4%BF%AE%E4%BB%99%E8%84%9A%E6%9C%AC%E5%AE%9E%E6%88%98.user.js)
+2. [点击安装](chrome-extension://dhdgffkkebhmkfjojejmpbldmpobfkfo/ask.html?aid=34b6a802-efcc-46b9-9525-04b6f636031d)
 
 3. 刷新云顶
 
