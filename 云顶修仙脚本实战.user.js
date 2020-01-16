@@ -164,6 +164,8 @@ function getUserGoods(func_a, func_end) {
                     func_end();
                 }
             })
+
+            
         }
     })
 }
@@ -194,7 +196,7 @@ function sellGoods(goodsJson) {
             goodsArray.forEach(good => {
                 goodsStr = goodsStr + good['name'] + '数目: ' + good['count'+ '，'];
             });
-            console.log(getCurrentTimeStr() + '卖物品:' + res.msg + ' 内容:' + goodsJson);
+            console.log(getCurrentTimeStr() + '卖物品:' + res.msg + ' 内容:' + goodsArray);
         }
     });
 }
@@ -359,6 +361,7 @@ function getCurrentTimeStr() {
 
 // 合成神龙经验值
 function makeExpGood() {
+    logSeparateLine();
     var min_count = 0;
     var canhun_type_count = 0;  // 残魂碎片类型个数，如果背包有7个类型的残魂碎片就允许合成
     var temp_func = function (data) {
@@ -394,6 +397,7 @@ function makeExpGood() {
 
 // 合成任务所需物品 竹叶碎青
 function makeTaskGoods() {
+    logSeparateLine();
     var zuyeNum = 0;
     var suiqinNum = 0;
     var zuyeId = "";
@@ -429,6 +433,7 @@ function makeTaskGoods() {
 
 // 卖未鉴定的装备
 function sellUnIdentifyGoods() {
+    logSeparateLine();
     var needSellGoods = ['鱼尾斧', '金丝软甲', '千里宝靴', '鉴-青铜', '鉴-皮质', '鉴-鹿皮盔', '鉴-铁', '鉴-竹', '鉴-冬霜冠', '鉴-薜荔腰带', '祥瑞玉兔', '鉴-皮革', '浣花玉伞', '平安银配', '鉴-棉布', '平安扣'];
 
     var sell_goods = [];
@@ -456,6 +461,7 @@ function sellUnIdentifyGoods() {
 
 // 寻找并购买低价宠物丹、技能书、玄铁块
 function searchAndBuyCheapGoods() {
+    logSeparateLine();
     // 单价<=1金叶的物品名字数组
     var oneNameArray = ['蚊针', '蛇皮', '蜥血', '豹子胆'];
 
@@ -528,6 +534,7 @@ function searchAndBuyCheapGoods() {
 
 // 查看当前是否能循环做帮派任务(帮派任务做满100个、帮派任务没有了)
 function updateFactionTaskStatus() {
+    logSeparateLine();
     var funcFindMyFactionTask = function (taskList) {
         var isFactionTaskExist = false;
         taskList.forEach(task => {
