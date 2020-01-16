@@ -6,6 +6,7 @@
 // @author       LT
 // @match        http://joucks.cn:3344/
 // @grant        none
+// @run-at       document-end
 // ==/UserScript==
 
 var cookie = '';
@@ -188,7 +189,7 @@ function sellGoods(goodsJson) {
     }).then(function (res) {
         if (res.code == 200) {
             var goodsArray = JSON.parse(goodsJson);
-            
+
             var goodsStr = '';
             goodsArray.forEach(good => {
                 goodsStr = goodsStr + good['name'] + '数目: ' + good['count'+ '，'];
