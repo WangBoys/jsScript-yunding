@@ -377,8 +377,8 @@ function logSeparateLine() {
 }
 
 
-var dateObj = new Date();
 function getCurrentTimeStr() {
+    var dateObj = new Date();
     var y = dateObj.getFullYear();
     var m = dateObj.getMonth() + 1;
     m = m < 10 ? ('0' + m) : m;
