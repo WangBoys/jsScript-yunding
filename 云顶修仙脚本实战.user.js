@@ -14,12 +14,9 @@ var key_autoSellGood = "key_autoSellGood";
 var key_autoFinishFationTask = "key_autoFinishFationTask";
 var key_autoPk = "key_autoPk";
 var cookie = '';
-var userInfo = {
-    name: '',
-    level: 0,
-    exp: 0,
-    fagitue: 0,
-};
+var userItem;
+var userGoods;
+
 var factionTaskEanbled = false; // 是否可以循环做帮派任务
 
 (function () {
@@ -46,7 +43,6 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
         '<input type="checkbox" id="autoPk"> 自动pk(暂未支持)<br> ';
     var container = document.querySelector('body');
     container.appendChild(textEle);
-
 
     setupData();
     runBasicCycle();
@@ -108,7 +104,8 @@ function runBasicCycle() {
 
         // 30秒执行一次
         if (cur_time % 30 == 0) {
-            // 检测是否在自动打怪
+            // 更新个人信息
+            getUserInfo();
         }
 
         if (cur_time % 60 == 0) {
@@ -160,10 +157,7 @@ function getUserInfo() {
         return response.json()
     }).then(function (res) {
         var tempUser = res.data.user;
-        userInfo.name = tempUser.nickname;
-        userInfo.level = tempUser.level;
-        userInfo.exp = tempUser.repair_num;
-        userInfo.fagitue = tempUser.health_num;
+        userItem = tempUser;
     })
 }
 
@@ -179,6 +173,7 @@ function getUserGoods(func_a, func_end) {
     }).then(function (res) {
         var pages = res.pages;
         var resultPages = 0;
+        var tempGoods = [];
         for (var j = 1; j < pages + 1; j++) {
             var tempPage = j;
             setTimeout(function () {
@@ -190,6 +185,7 @@ function getUserGoods(func_a, func_end) {
                 }).then(function (response) {
                     return response.json();
                 }).then(function (res) {
+                    tempGoods.push(res.data);
                     for (var i = 0; i < res.data.length; i++) {
                         if (res.data[i].goods != null && func_a != null) {
                             func_a(res.data[i]);
@@ -315,7 +311,6 @@ function getFactionTask(funcA) {
         return response.json()
     }).then(function (res) {
         if (funcA != null) {
-            console.log(getCurrentTimeStr() + '领取帮派任务:' + res.msg);
             funcA(res);
         }
     })
@@ -511,7 +506,7 @@ function searchAndBuyCheapGoods() {
     var blackListNameArray = ['祥瑞玉兔'];
 
     var func_a = function (data) {
-        if (data.user.nickname == userInfo.name || data.isPwd == true) {
+        if (data.user.nickname == userItem.name || data.isPwd == true) {
             return;
         }
         var i = 0;
@@ -625,6 +620,7 @@ function startAutoFinishFactionTask() {
 
     // 先拉一次帮派任务 无论成功或者失败就开始做帮派任务
     getFactionTask(function (res) {
+        console.log(getCurrentTimeStr() + '领取帮派任务:' + res.msg);
         getUserTasks(funcFindMyFactionTask);
     });
 }
