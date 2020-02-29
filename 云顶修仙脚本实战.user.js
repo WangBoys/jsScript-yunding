@@ -39,8 +39,7 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
     textEle.innerHTML =
         '<input type="checkbox" id="autoMakeGood"> 自动合成物品(竹叶碎青)<br> ' +
         '<input type="checkbox" id="autoSellGood"> 自动卖低级未鉴定的物品<br> ' +
-        '<input type="checkbox" id="autoFinishFationTask"> 自动做帮派任务<br>' +
-        '<input type="checkbox" id="autoPk"> 自动pk(暂未支持)<br> ';
+        '<input type="checkbox" id="autoFinishFationTask"> 自动做帮派任务<br>';
     var container = document.querySelector('body');
     container.appendChild(textEle);
 
@@ -53,6 +52,7 @@ var factionTaskEanbled = false; // 是否可以循环做帮派任务
 // 获取缓存的一些配置信息，获取用户信息，获取用户公会任务状态
 function setupData() {
     getUserInfo();
+    getUserGoods(null, null);
     updateFactionTaskStatus();
     if (localStorage.getItem(key_autoMakeGood) == "1") {
         $("#autoMakeGood").attr('checked', true);
@@ -106,10 +106,12 @@ function runBasicCycle() {
         if (cur_time % 30 == 0) {
             // 更新个人信息
             getUserInfo();
+            // 更新个人物品
+            getUserGoods(null, null);
         }
 
         if (cur_time % 60 == 0) {
-
+            buyAndUseRedDrugIfNeed();
         }
 
         // 10分钟执行一次
@@ -174,10 +176,11 @@ function getUserGoods(func_a, func_end) {
         var pages = res.pages;
         var resultPages = 0;
         var tempGoods = [];
+        var tempPage = 0;
         for (var j = 1; j < pages + 1; j++) {
-            var tempPage = j;
             setTimeout(function () {
-                fetch("http://joucks.cn:3344/api/getUserGoods?page=" + tempPage, {
+                tempPage += 1;
+                fetch("http://joucks.cn:3344/api/getUserGoods?tid=all&page=" + tempPage, {
                     method: "GET",
                     headers: {
                         'Cookie': cookie,
@@ -185,21 +188,39 @@ function getUserGoods(func_a, func_end) {
                 }).then(function (response) {
                     return response.json();
                 }).then(function (res) {
-                    tempGoods.push(res.data);
                     for (var i = 0; i < res.data.length; i++) {
+                        tempGoods.push(res.data[i]);
                         if (res.data[i].goods != null && func_a != null) {
                             func_a(res.data[i]);
                         }
                     }
                     resultPages += 1;
                     // 完成后回调
-                    if (pages == resultPages && func_end != null) {
-                        func_end();
+                    if (pages == resultPages) {
+                        userGoods = tempGoods;
+                        if (func_end != null) {
+                            func_end();
+                        }
                     }
                 })
-            }, 1000 * (tempPage - 1));
+            }, 1000 * (j - 1));
         }
     })
+}
+
+// 根据名字获取用户某个物品信息
+function getGoodInfo(goodName) {
+    if (userGoods == null) {
+        return null;
+    }
+
+    for (var i = 0; i < userGoods.length; i++) {
+        var good = userGoods[i];
+        if (good.goods.name == goodName) {
+            return good;
+        }
+    }
+    return null;
 }
 
 // 卖物品
@@ -235,17 +256,14 @@ function sellGoods(goodsJson) {
 
 // 使用物品
 function useGood(id) {
-    fetch("http://joucks.cn:3344/api/useGoodsToUser", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-            'Cookie': cookie,
-        },
-        body: 'ugid=' + id
-    }).then(function (response) {
-    }).then(function (res) {
-        console.log(getCurrentTimeStr() + res)
-    });
+    $.post("http://joucks.cn:3344/api/useGoodsToUser",
+    {
+        ugid: id,
+    },
+
+    function (res) {
+        console.log(getCurrentTimeStr() + "使用物品:" +res.msg)
+    })
 }
 
 // 合成物品
@@ -258,6 +276,21 @@ function makeGood(goods_json) {
 
         function (data) {
             console.log(getCurrentTimeStr() + 'makeGood log:' + data.msg);
+        })
+}
+
+// 购买商店物品
+function buyShopGoods(goodId, funcResult) {
+    $.post("http://joucks.cn:3344/api/byGoodsToMyUser",
+        {
+            gid: goodId
+        },
+
+        function (data) {
+            console.log(getCurrentTimeStr() + "购买" + data.data.name + ":" + data.msg);
+            if (data.code == 200 && funcResult != null) {
+                funcResult();
+            }
         })
 }
 
@@ -623,4 +656,24 @@ function startAutoFinishFactionTask() {
         console.log(getCurrentTimeStr() + '领取帮派任务:' + res.msg);
         getUserTasks(funcFindMyFactionTask);
     });
+}
+
+// 自动购买红药水and使用红药水 低于20w体力就自动购买、使用
+function buyAndUseRedDrugIfNeed() {
+    let goodId = "5dbfcc8cd9b8c0272471e2bf";
+    if (userItem.health_num < 20*10000) {
+        var funcResult = function() {
+            if (userGoods == null) {
+                getUserGoods(null, null);
+            }
+            let good = getGoodInfo("红药水");
+            if (good != null) {
+                useGood(good._id);
+            } else {
+                console.log(getCurrentTimeStr() + '当前背包没有红药水');
+            }
+        };
+
+        buyShopGoods(goodId, funcResult);
+    }
 }
