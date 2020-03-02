@@ -213,11 +213,17 @@ function getGoodInfo(goodName) {
     if (userGoods == null) {
         return null;
     }
-
+    
     for (var i = 0; i < userGoods.length; i++) {
         var good = userGoods[i];
-        if (good.goods.name == goodName) {
-            return good;
+        if ("goods" in good) {
+            if (good.goods.name == goodName) {
+                return good;
+            }
+        } else if ("user_equipment" in good) {
+            if (good.user_equipment.name == goodName) {
+                return good;
+            }
         }
     }
     return null;
